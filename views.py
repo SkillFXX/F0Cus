@@ -4,11 +4,11 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from colors import app_color
-from config import COLORS, APP_FONT
+from config import COLORS, APP_FONT, DEFAULT_LANGUAGE
 from data import (
     load_app_totals_today, load_settings, save_settings,
     load_activity_last_7_days, load_app_totals_7_days,
-    fmt_time, load_total_today
+    fmt_time, load_total_today, t, load_available_language
 )
 from widgets import BarChart, DonutChart, LegendItem
 
@@ -27,10 +27,10 @@ class DashboardView(ctk.CTkScrollableFrame):
             w.destroy()
         
         # Today activity infos
-        ctk.CTkLabel(self, text="Activité — Aujourd'hui",
+        ctk.CTkLabel(self, text=f"{t("activity")} — {t("today")}",
                      font=ctk.CTkFont(APP_FONT, 18, "bold"),
                      text_color=COLORS["text"]).pack(anchor="w", padx=28, pady=(22, 2))
-        ctk.CTkLabel(self, text="Votre temps d'écran de ce jour.",
+        ctk.CTkLabel(self, text=t("screen_time_today"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text_muted"]).pack(anchor="w", padx=28, pady=(0, 16))
         
@@ -41,7 +41,7 @@ class DashboardView(ctk.CTkScrollableFrame):
         today_time_card = self._card(self)
         today_time_card.pack(fill="x", padx=28, pady=(0, 14))
         
-        ctk.CTkLabel(today_time_card, text="Temps passé aujourd'hui",
+        ctk.CTkLabel(today_time_card, text=t("time_spend_today"),
                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
                      text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 4))
         ctk.CTkLabel(today_time_card, text=f"{today_time}",
@@ -51,31 +51,35 @@ class DashboardView(ctk.CTkScrollableFrame):
         # Today screen time per app
         leg_card = self._card(self)
         leg_card.pack(fill="x", padx=28, pady=(0, 14))
-        ctk.CTkLabel(leg_card, text="Détail par application",
+        ctk.CTkLabel(leg_card, text=t("details_per_app"),
                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
                      text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 6))
         
         app_totals_today = load_app_totals_today()
 
-        grid = ctk.CTkFrame(leg_card, fg_color="transparent")
-        grid.pack(fill="x", padx=14, pady=(0, 10))
-        grid.columnconfigure(0, weight=1)
-        grid.columnconfigure(1, weight=1)
+        apps_list = ctk.CTkFrame(leg_card, fg_color="transparent")
+        apps_list.pack(fill="x", padx=14, pady=(0, 10))
+
+        col1 = ctk.CTkFrame(apps_list, fg_color="transparent")
+        col2 = ctk.CTkFrame(apps_list, fg_color="transparent")
+        col1.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        col2.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
         sorted_apps = sorted(app_totals_today.items(), key=lambda x: x[1], reverse=True)
         for i, (app, secs) in enumerate(sorted_apps[:10]):
-            cell = ctk.CTkFrame(grid, fg_color=COLORS["surface2"], corner_radius=8)
-            cell.grid(row=i // 2, column=i % 2, padx=5, pady=4, sticky="ew") 
+            parent = col1 if i % 2 == 0 else col2
+            cell = ctk.CTkFrame(parent, fg_color=COLORS["surface2"], corner_radius=8)
+            cell.pack(fill="x", pady=4)
             LegendItem(cell, app, fmt_time(secs)).pack(fill="x", padx=10, pady=6)
             
         
         
         # 7 Last days activity infos
 
-        ctk.CTkLabel(self, text="Activité — 7 derniers jours",
+        ctk.CTkLabel(self, text=f"{t("activity")} — {t("last_7_days")}",
                      font=ctk.CTkFont(APP_FONT, 18, "bold"),
                      text_color=COLORS["text"]).pack(anchor="w", padx=28, pady=(22, 2))
-        ctk.CTkLabel(self, text="Vue d'ensemble de votre temps d'écran",
+        ctk.CTkLabel(self, text=t("global_view_screen_time"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text_muted"]).pack(anchor="w", padx=28, pady=(0, 16))
 
@@ -88,14 +92,14 @@ class DashboardView(ctk.CTkScrollableFrame):
 
         bar_card = self._card(row)
         bar_card.pack(side="left", fill="both", expand=True, padx=(0, 10))
-        ctk.CTkLabel(bar_card, text="Activité quotidienne",
+        ctk.CTkLabel(bar_card, text=t("daily_activity"),
                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
                      text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 4))
         BarChart(bar_card, daily_data_7_days, width=500, height=190).pack(padx=12, pady=(0, 10))
 
         donut_card = self._card(row)
         donut_card.pack(side="right")
-        ctk.CTkLabel(donut_card, text="Répartition",
+        ctk.CTkLabel(donut_card, text=t("distribution"),
                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
                      text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 4))
         DonutChart(donut_card, app_totals_7_days, size=190).pack(padx=16, pady=(0, 10))
@@ -103,22 +107,26 @@ class DashboardView(ctk.CTkScrollableFrame):
         # Legends
         leg_card = self._card(self)
         leg_card.pack(fill="x", padx=28, pady=(0, 14))
-        ctk.CTkLabel(leg_card, text="Détail par application",
+        ctk.CTkLabel(leg_card, text=t("details_per_app"),
                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
                      text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 6))
 
-        grid = ctk.CTkFrame(leg_card, fg_color="transparent")
-        grid.pack(fill="x", padx=14, pady=(0, 10))
-        grid.columnconfigure(0, weight=1)
-        grid.columnconfigure(1, weight=1)
+        apps_list = ctk.CTkFrame(leg_card, fg_color="transparent")
+        apps_list.pack(fill="x", padx=14, pady=(0, 10))
+
+        col1 = ctk.CTkFrame(apps_list, fg_color="transparent")
+        col2 = ctk.CTkFrame(apps_list, fg_color="transparent")
+        col1.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        col2.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
         sorted_apps = sorted(app_totals_7_days.items(), key=lambda x: x[1], reverse=True)
         for i, (app, secs) in enumerate(sorted_apps[:10]):
-            cell = ctk.CTkFrame(grid, fg_color=COLORS["surface2"], corner_radius=8)
-            cell.grid(row=i // 2, column=i % 2, padx=5, pady=4, sticky="ew") 
+            parent = col1 if i % 2 == 0 else col2
+            cell = ctk.CTkFrame(parent, fg_color=COLORS["surface2"], corner_radius=8)
+            cell.pack(fill="x", pady=4)
             LegendItem(cell, app, fmt_time(secs)).pack(fill="x", padx=10, pady=6)
 
-        ctk.CTkButton(self, text="↻  Actualiser",
+        ctk.CTkButton(self, text=f"↻  {t("refresh")}",
                       font=ctk.CTkFont(APP_FONT, 12),
                       fg_color=COLORS["surface2"], hover_color=COLORS["border"],
                       text_color=COLORS["text"], corner_radius=8, width=130, height=32,
@@ -147,88 +155,98 @@ class SettingsView(ctk.CTkScrollableFrame):
             w.destroy()
         self._settings = load_settings()
 
-        ctk.CTkLabel(self, text="Paramètres",
+        ctk.CTkLabel(self, text=t("settings"),
                      font=ctk.CTkFont(APP_FONT, 18, "bold"),
                      text_color=COLORS["text"]).pack(anchor="w", padx=28, pady=(22, 2))
-        ctk.CTkLabel(self, text="Configuration générale de F0Cus",
+        ctk.CTkLabel(self, text=t("general_settings"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text_muted"]).pack(anchor="w", padx=28, pady=(0, 16))
 
         gen = self._card(self)
         gen.pack(fill="x", padx=28, pady=(0, 12))
-        ctk.CTkLabel(gen, text="Général",
+        ctk.CTkLabel(gen, text=t("general"),
                      font=ctk.CTkFont(APP_FONT, 13, "bold"),
                      text_color=COLORS["accent"]).pack(anchor="w", padx=16, pady=(12, 6))
 
         row_ri = ctk.CTkFrame(gen, fg_color="transparent")
         row_ri.pack(fill="x", padx=16, pady=(0, 12))
-        
-        
-        
-        # Refresh interval
-        ctk.CTkLabel(row_ri, text="Intervalle de rafraîchissement (secondes)",
+
+        # Language
+        row_lang = ctk.CTkFrame(row_ri, fg_color="transparent")
+        row_lang.pack(fill="x", pady=(0, 8))
+        ctk.CTkLabel(row_lang, text=t("software_language"),
                      font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"]).grid(row=0, column=0, sticky="w")
+                     text_color=COLORS["text"]).pack(side="left")
+        self._language_var = ctk.StringVar(value=self._settings.get("language", DEFAULT_LANGUAGE))
+        ctk.CTkOptionMenu(row_lang, variable=self._language_var, width=80,
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     fg_color=COLORS["surface2"], values=load_available_language()).pack(side="right")
+
+        # Refresh interval
+        row_refresh = ctk.CTkFrame(row_ri, fg_color="transparent")
+        row_refresh.pack(fill="x", pady=(0, 8))
+        ctk.CTkLabel(row_refresh, text=f"{t('update_time')} ({t('seconds')})",
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     text_color=COLORS["text"]).pack(side="left")
         self._refresh_var = ctk.StringVar(
             value=str(self._settings.get("refresh_interval", 5)))
-        ctk.CTkEntry(row_ri, textvariable=self._refresh_var, width=80,
+        ctk.CTkEntry(row_refresh, textvariable=self._refresh_var, width=80,
                      font=ctk.CTkFont(APP_FONT, 12),
                      fg_color=COLORS["surface2"], border_color=COLORS["border"],
-                     text_color=COLORS["text"]).grid(row=0, column=1, sticky="e")
-        
-        ctk.CTkFrame(row_ri, height=1, fg_color=COLORS["border"]).grid(
-            row=1,
-            column=0,
-            columnspan=2,
-            sticky="ew",
-            pady=10
-        )
-        
+                     text_color=COLORS["text"]).pack(side="right")
+
+        ctk.CTkFrame(row_ri, height=1, fg_color=COLORS["border"]).pack(fill="x", pady=10)
+
         # Daily limit enabler
+        row_daily = ctk.CTkFrame(row_ri, fg_color="transparent")
+        row_daily.pack(fill="x", pady=(0, 8))
         self._daily_limit_var = ctk.BooleanVar(value=self._settings.get("daily_limit", {}).get("enabled", False))
-        ctk.CTkLabel(row_ri, text="Activer la limite journalière",
+        ctk.CTkLabel(row_daily, text=t("enable_daily_limit"),
                      font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"]).grid(row=2, column=0, sticky="w")
+                     text_color=COLORS["text"]).pack(side="left")
         ctk.CTkCheckBox(
-            row_ri,
+            row_daily,
             text="",
             variable=self._daily_limit_var,
             command=self._toggle_daily_limit
-        ).grid(row=2, column=1, sticky="e")
+        ).pack(side="right")
 
         # Daily limit frame
         self._daily_limit_frame = ctk.CTkFrame(row_ri, fg_color="transparent")
-        self._daily_limit_frame.grid(row=3, column=0, columnspan=2, sticky="ew")
-        
-        
+        self._daily_limit_frame.pack(fill="x")
+
         self._toggle_daily_limit()
+
         # Daily limit time
-
-        
         self._daily_limit_time_var = ctk.StringVar(value=str(self._settings.get("daily_limit", {}).get("limit", 7200)))
-
-        ctk.CTkLabel(self._daily_limit_frame, text="Limite journalière (secondes)",
+        row_limit = ctk.CTkFrame(self._daily_limit_frame, fg_color="transparent")
+        row_limit.pack(fill="x", pady=(0, 6))
+        ctk.CTkLabel(row_limit, text=t("daily_limit_seconds"),
                      font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"]).grid(row=3, column=0, sticky="w")
-        ctk.CTkEntry(self._daily_limit_frame, textvariable=self._daily_limit_time_var, width=80,
+                     text_color=COLORS["text"]).pack(side="left")
+        ctk.CTkEntry(row_limit, textvariable=self._daily_limit_time_var, width=80,
                      font=ctk.CTkFont(APP_FONT, 12),
                      fg_color=COLORS["surface2"], border_color=COLORS["border"],
-                     text_color=COLORS["text"]).grid(row=3, column=1, sticky="e")
+                     text_color=COLORS["text"]).pack(side="right")
 
         # Daily limit action
+        row_action = ctk.CTkFrame(self._daily_limit_frame, fg_color="transparent")
+        row_action.pack(fill="x", pady=(0, 6))
         self._daily_limit_action_var = ctk.StringVar(value=self._settings["daily_limit"]["action"])
-        ctk.CTkRadioButton(self._daily_limit_frame, text="Action : Popup", variable=self._daily_limit_action_var, value="popup").grid(row=4, column=0, sticky="w")
-        ctk.CTkRadioButton(self._daily_limit_frame, text="Action : Eteindre l'ordinateur", variable=self._daily_limit_action_var, value="kill").grid(row=4, column=1, sticky="e")
+        ctk.CTkRadioButton(row_action, text=t("action_popup"), variable=self._daily_limit_action_var, value="popup").pack(side="left", padx=(0, 6))
+        ctk.CTkRadioButton(row_action, text=t("action_shutdown"), variable=self._daily_limit_action_var, value="kill").pack(side="left")
 
         # Daily limit popup action
+        row_popup = ctk.CTkFrame(self._daily_limit_frame, fg_color="transparent")
+        row_popup.pack(fill="x", pady=(0, 6))
         self._daily_limit_popup_var = ctk.StringVar(value=str(self._settings.get("daily_limit", {}).get("popup_frequency", 600)))
-        ctk.CTkLabel(self._daily_limit_frame, text="Frequences de popup (secondes)",
+        ctk.CTkLabel(row_popup, text=t("popup_frequency_seconds"),
                      font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"]).grid(row=5, column=0, sticky="w")
-        ctk.CTkEntry(self._daily_limit_frame, textvariable=self._daily_limit_popup_var, width=80,
+                     text_color=COLORS["text"]).pack(side="left")
+        ctk.CTkEntry(row_popup, textvariable=self._daily_limit_popup_var, width=80,
                      font=ctk.CTkFont(APP_FONT, 12),
                      fg_color=COLORS["surface2"], border_color=COLORS["border"],
-                     text_color=COLORS["text"]).grid(row=5, column=1, sticky="e")
+                     text_color=COLORS["text"]).pack(side="right")
         
         
         # Restricted apps
@@ -237,10 +255,10 @@ class SettingsView(ctk.CTkScrollableFrame):
 
         hdr = ctk.CTkFrame(rest, fg_color="transparent")
         hdr.pack(fill="x", padx=16, pady=(12, 6))
-        ctk.CTkLabel(hdr, text="Applications restreintes",
+        ctk.CTkLabel(hdr, text=t("restricted_apps_label"),
                      font=ctk.CTkFont(APP_FONT, 13, "bold"),
                      text_color=COLORS["accent"]).pack(side="left")
-        ctk.CTkButton(hdr, text="+ Ajouter",
+        ctk.CTkButton(hdr, text=t("add_app_button"),
                       font=ctk.CTkFont(APP_FONT, 11),
                       fg_color=COLORS["accent"], hover_color="#3B6FE8",
                       corner_radius=8, height=28, width=90,
@@ -249,18 +267,18 @@ class SettingsView(ctk.CTkScrollableFrame):
         self._apps_frame = ctk.CTkFrame(rest, fg_color="transparent")
         self._apps_frame.pack(fill="x", padx=16, pady=(0, 12))
         self._render_apps()
-
-        ctk.CTkButton(self, text="💾  Sauvegarder",
+        
+        ctk.CTkButton(self, text=t("save_button"),
                       font=ctk.CTkFont(APP_FONT, 13, "bold"),
                       fg_color=COLORS["success"], hover_color="#22C55E",
                       text_color="#000", corner_radius=10, height=38,
                       command=self._save).pack(anchor="e", padx=28, pady=(4, 24))
 
     def _toggle_daily_limit(self):
-            if self._daily_limit_var.get():
-                self._daily_limit_frame.grid()
-            else:
-                self._daily_limit_frame.grid_remove()
+        if self._daily_limit_var.get():
+            self._daily_limit_frame.pack(fill="x")
+        else:
+            self._daily_limit_frame.pack_forget()
 
     def _render_apps(self):
         for w in self._apps_frame.winfo_children():
@@ -268,7 +286,7 @@ class SettingsView(ctk.CTkScrollableFrame):
 
         apps = self._settings.get("restricted_apps", [])
         if not apps:
-            ctk.CTkLabel(self._apps_frame, text="Aucune application restreinte",
+            ctk.CTkLabel(self._apps_frame, text=t("no_restricted_apps"),
                          text_color=COLORS["text_muted"],
                          font=ctk.CTkFont(APP_FONT, 11)).pack(pady=6)
             return
@@ -286,19 +304,19 @@ class SettingsView(ctk.CTkScrollableFrame):
 
         is_kill = app.get("action") == "kill"
         ctk.CTkLabel(row,
-                     text="💀 Kill" if is_kill else "🔔 Popup",
+                     text=t("kill_action") if is_kill else t("popup_action"),
                      font=ctk.CTkFont(APP_FONT, 10),
                      text_color=COLORS["danger"] if is_kill else COLORS["warning"],
                      fg_color=COLORS["surface"], corner_radius=6,
                      width=70, height=22).pack(side="left", padx=8)
 
-        ctk.CTkLabel(row, text=f"Limite : {fmt_time(app['limit'])}",
+        ctk.CTkLabel(row, text=f"{t('limit_word')} {fmt_time(app['limit'])}",
                      font=ctk.CTkFont(APP_FONT, 11),
                      text_color=COLORS["text_dim"]).pack(side="left", padx=4)
 
         if not is_kill:
             ctk.CTkLabel(row,
-                         text=f"Rappel : {fmt_time(app.get('popup_frequency', 300))}",
+                         text=f"{t('reminder')} {fmt_time(app.get('popup_frequency', 300))}",
                          font=ctk.CTkFont(APP_FONT, 11),
                          text_color=COLORS["text_dim"]).pack(side="left", padx=4)
 
@@ -330,16 +348,19 @@ class SettingsView(ctk.CTkScrollableFrame):
             daily_limit_time = int(self._daily_limit_time_var.get())
             daily_limit_action = self._daily_limit_action_var.get()
             daily_limit_popup_frequency = int(self._daily_limit_popup_var.get())
+            language = self._language_var.get()
         except ValueError:
-            messagebox.showerror("Erreur", "Les valeurs sont invalides.")
+            messagebox.showerror(t("error"), t("invalid_values"))
             return
         self._settings["refresh_interval"] = interval
         self._settings["daily_limit"]["enabled"] = daily_limit_enabled
         self._settings["daily_limit"]["limit"] = daily_limit_time
         self._settings["daily_limit"]["action"] = daily_limit_action
         self._settings["daily_limit"]["popup_frequency"] = daily_limit_popup_frequency
+        self._settings["language"] = language.lower()
         save_settings(self._settings)
-        messagebox.showinfo("Sauvegardé", "Paramètres sauvegardés ✓")
+        self._build()
+        messagebox.showinfo(t("error"), t("settings_saved"))
 
     @staticmethod
     def _card(parent) -> ctk.CTkFrame:
@@ -350,7 +371,7 @@ class SettingsView(ctk.CTkScrollableFrame):
 class AppDialog(ctk.CTkToplevel):
     def __init__(self, master, settings: dict, edit_idx=None, on_save=None):
         super().__init__(master)
-        self.title("Application restreinte")
+        self.title(t("restricted_app_title"))
         self.geometry("440x440")
         self.resizable(False, False)
         self.configure(fg_color=COLORS["surface"])
@@ -362,17 +383,17 @@ class AppDialog(ctk.CTkToplevel):
 
         P = dict(padx=20, pady=6)
 
-        ctk.CTkLabel(self, text="Nom de l'exécutable (.exe)",
+        ctk.CTkLabel(self, text=t("executable_name"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text"]).pack(anchor="w", **P)
         self._name_var = ctk.StringVar(value=editing.get("name", ""))
         ctk.CTkEntry(self, textvariable=self._name_var,
-                     placeholder_text="ex: chrome.exe",
+                     placeholder_text=t("example_exe"),
                      fg_color=COLORS["surface2"], border_color=COLORS["border"],
                      text_color=COLORS["text"],
                      font=ctk.CTkFont(APP_FONT, 12)).pack(fill="x", **P)
 
-        ctk.CTkLabel(self, text="Limite de temps (secondes)",
+        ctk.CTkLabel(self, text=t("time_limit_seconds"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text"]).pack(anchor="w", **P)
         self._limit_var = ctk.StringVar(value=str(editing.get("limit", 3600)))
@@ -381,7 +402,7 @@ class AppDialog(ctk.CTkToplevel):
                      text_color=COLORS["text"],
                      font=ctk.CTkFont(APP_FONT, 12)).pack(fill="x", **P)
 
-        ctk.CTkLabel(self, text="Action en cas de dépassement",
+        ctk.CTkLabel(self, text=t("action_on_exceed"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text"]).pack(anchor="w", **P)
         self._action_var = ctk.StringVar(value=editing.get("action", "popup"))
@@ -394,7 +415,7 @@ class AppDialog(ctk.CTkToplevel):
 
         self._freq_frame = ctk.CTkFrame(self, fg_color="transparent")
         self._freq_frame.pack(fill="x")
-        ctk.CTkLabel(self._freq_frame, text="Fréquence popup (secondes)",
+        ctk.CTkLabel(self._freq_frame, text=t("popup_frequency_label"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text"]).pack(anchor="w", padx=20, pady=(6, 2))
         self._freq_var = ctk.StringVar(value=str(editing.get("popup_frequency", 300)))
@@ -405,7 +426,7 @@ class AppDialog(ctk.CTkToplevel):
 
         self._toggle_freq(self._action_var.get())
 
-        ctk.CTkButton(self, text="Enregistrer",
+        ctk.CTkButton(self, text=t("save_app_button"),
                       font=ctk.CTkFont(APP_FONT, 13, "bold"),
                       fg_color=COLORS["accent"], hover_color="#3B6FE8",
                       corner_radius=10, height=38,
@@ -420,13 +441,13 @@ class AppDialog(ctk.CTkToplevel):
     def _save(self):
         name = self._name_var.get().strip()
         if not name:
-            messagebox.showerror("Erreur", "Nom requis.", parent=self)
+            messagebox.showerror(t("error"), t("name_required"), parent=self)
             return
         try:
             limit = int(self._limit_var.get())
             freq  = int(self._freq_var.get()) if self._action_var.get() == "popup" else 300
         except ValueError:
-            messagebox.showerror("Erreur", "Valeurs numériques invalides.", parent=self)
+            messagebox.showerror(t("error"), t("invalid_numeric_values"), parent=self)
             return
 
         entry = {"name": name, "limit": limit,

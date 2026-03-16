@@ -6,7 +6,7 @@ import customtkinter as ctk
 
 from colors import app_color
 from config import COLORS, APP_FONT
-from data import fmt_time
+from data import fmt_time, t
 
 
 # Donut chart by Sonnet 4.6
@@ -46,7 +46,7 @@ class DonutChart(tk.Canvas):
         # Texte central
         self.create_text(cx, cy - 9, text=fmt_time(total),
                          fill=COLORS["text"], font=(APP_FONT, 11, "bold"))
-        self.create_text(cx, cy + 9, text="7 jours",
+        self.create_text(cx, cy + 9, text=t("seven_days"),
                          fill=COLORS["text_muted"], font=(APP_FONT, 8))
 
     def _draw_segment(self, cx, cy, r_in, r_out, start_deg, sweep_deg, color):
@@ -67,7 +67,7 @@ class DonutChart(tk.Canvas):
         r = self._size * 0.42
         self.create_oval(cx - r, cy - r, cx + r, cy + r,
                          outline=COLORS["border"], width=2, fill="")
-        self.create_text(cx, cy, text="Aucune\ndonnée",
+        self.create_text(cx, cy, text=t("no_data"),
                          fill=COLORS["text_muted"], font=(APP_FONT, 9),
                          justify="center")
 
@@ -160,13 +160,13 @@ class LimitPopup(ctk.CTkToplevel):
 
     def __init__(self, master, app_name: str, total: int, limit: int):
         super().__init__(master)
-        self.title("⚠ Limite atteinte")
+        self.title(t("time_exceeded"))
         self.geometry("380x230")
         self.resizable(False, False)
         self.configure(fg_color=COLORS["surface"])
         self.attributes("-topmost", True)
 
-        ctk.CTkLabel(self, text="⚠  Temps dépassé",
+        ctk.CTkLabel(self, text=t("time_exceeded"),
                      font=ctk.CTkFont(APP_FONT, 17, "bold"),
                      text_color=COLORS["danger"]).pack(pady=(24, 6))
         ctk.CTkLabel(self,
@@ -174,10 +174,10 @@ class LimitPopup(ctk.CTkToplevel):
                            f"pendant {fmt_time(total)}  (limite : {fmt_time(limit)})"),
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text"], justify="center").pack(pady=8)
-        ctk.CTkLabel(self, text="Pensez à faire une pause ! 🧘",
+        ctk.CTkLabel(self, text=t("take_a_break"),
                      font=ctk.CTkFont(APP_FONT, 11),
                      text_color=COLORS["text_muted"]).pack(pady=4)
-        ctk.CTkButton(self, text="OK, compris",
+        ctk.CTkButton(self, text=t("ok_understood"),
                       font=ctk.CTkFont(APP_FONT, 12, "bold"),
                       fg_color=COLORS["danger"], hover_color="#DC2626",
                       corner_radius=10, height=36,

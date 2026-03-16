@@ -5,7 +5,8 @@ import customtkinter as ctk
 import pystray                        
 from PIL import Image, ImageDraw      
 
-from config import COLORS, ICON_PATH, APP_FONT
+from config import COLORS, ICON_PATH, APP_FONT, APP_VERSION
+from data import t
 from monitor import ActivityMonitor
 from views import DashboardView, SettingsView
 from widgets import LimitPopup
@@ -56,8 +57,8 @@ class F0CusApp(ctk.CTk):
 
         self._nav_buttons: dict = {}
         for key, icon, label in [
-            ("dashboard", "📊", "Tableau de bord"),
-            ("settings",  "⚙",  "Paramètres"),
+            ("dashboard", "📊", t("dashboard_label")),
+            ("settings",  "⚙",  t("settings_label")),
         ]:
             btn = ctk.CTkButton(
                 sidebar,
@@ -75,7 +76,7 @@ class F0CusApp(ctk.CTk):
             self._nav_buttons[key] = btn
 
         # Indicateur monitoring
-        ctk.CTkLabel(sidebar, text="F0Cus (v0.2.2) by Flow Studio",
+        ctk.CTkLabel(sidebar, text=APP_VERSION,
                      font=ctk.CTkFont(APP_FONT, 9),
                      text_color=COLORS["text_muted"]).pack(side="bottom", pady=(0, 2))
 

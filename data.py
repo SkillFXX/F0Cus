@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from config import (
     ACTIVITY_PATH, SETTINGS_PATH,
-    DEFAULT_SETTINGS,
+    DEFAULT_SETTINGS, TRANSLATIONS, DEFAULT_LANGUAGE
 )
 
 
@@ -105,3 +105,32 @@ def fmt_time(seconds: int) -> str:
         return f"{seconds // 60}m {seconds % 60}s"
     else:
         return f"{seconds // 3600}h {(seconds % 3600) // 60}m"
+    
+def load_user_language():
+    settings = load_settings()
+
+    language = settings.get("language", DEFAULT_LANGUAGE)
+
+    if language not in TRANSLATIONS:
+        language = DEFAULT_LANGUAGE
+
+    return language
+
+def t(key):
+    language = load_user_language()
+    user_translation = TRANSLATIONS.get(language, {})
+    default_translation = TRANSLATIONS[DEFAULT_LANGUAGE]
+    if key in user_translation:
+        return user_translation[key]
+
+    if key in default_translation:
+        return default_translation[key]
+
+    return key
+
+def load_available_language():
+    languages = []
+    for language in TRANSLATIONS.keys():
+        temp = language[0].upper() + language[1:]
+        languages.append(temp)
+    return languages
