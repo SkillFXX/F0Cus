@@ -8,7 +8,7 @@ from config import COLORS, APP_FONT
 from data import (
     load_app_totals_today, load_settings, save_settings,
     load_activity_last_7_days, load_app_totals_7_days,
-    fmt_time,
+    fmt_time, load_total_today
 )
 from widgets import BarChart, DonutChart, LegendItem
 
@@ -34,6 +34,21 @@ class DashboardView(ctk.CTkScrollableFrame):
                      font=ctk.CTkFont(APP_FONT, 12),
                      text_color=COLORS["text_muted"]).pack(anchor="w", padx=28, pady=(0, 16))
         
+        # Today screen time
+        today_time = fmt_time(load_total_today())
+        
+        
+        today_time_card = self._card(self)
+        today_time_card.pack(fill="x", padx=28, pady=(0, 14))
+        
+        ctk.CTkLabel(today_time_card, text="Temps passé aujourd'hui",
+                     font=ctk.CTkFont(APP_FONT, 12, "bold"),
+                     text_color=COLORS["text_dim"]).pack(anchor="w", padx=14, pady=(12, 4))
+        ctk.CTkLabel(today_time_card, text=f"{today_time}",
+                     font=ctk.CTkFont(APP_FONT, 36, "bold"),
+                     text_color=COLORS["text"]).pack(pady=(0, 12))
+        
+        # Today screen time per app
         leg_card = self._card(self)
         leg_card.pack(fill="x", padx=28, pady=(0, 14))
         ctk.CTkLabel(leg_card, text="Détail par application",
