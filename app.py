@@ -47,10 +47,10 @@ class F0CusApp(ctk.CTk):
 
         logo = ctk.CTkFrame(sidebar, fg_color="transparent")
         logo.pack(pady=(28, 32), padx=20)
-        ctk.CTkLabel(logo, text="F0",
+        ctk.CTkLabel(logo, text="F0C",
                      font=ctk.CTkFont(APP_FONT, 28, "bold"),
                      text_color=COLORS["accent"]).pack(side="left")
-        ctk.CTkLabel(logo, text="Cus",
+        ctk.CTkLabel(logo, text="us",
                      font=ctk.CTkFont(APP_FONT, 28, "bold"),
                      text_color=COLORS["text"]).pack(side="left")
 
@@ -75,7 +75,7 @@ class F0CusApp(ctk.CTk):
             self._nav_buttons[key] = btn
 
         # Indicateur monitoring
-        ctk.CTkLabel(sidebar, text="F0Cus (v0.2.1) by Flow Studio",
+        ctk.CTkLabel(sidebar, text="F0Cus (v0.2.2) by Flow Studio",
                      font=ctk.CTkFont(APP_FONT, 9),
                      text_color=COLORS["text_muted"]).pack(side="bottom", pady=(0, 2))
 
