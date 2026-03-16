@@ -147,16 +147,76 @@ class SettingsView(ctk.CTkScrollableFrame):
 
         row_ri = ctk.CTkFrame(gen, fg_color="transparent")
         row_ri.pack(fill="x", padx=16, pady=(0, 12))
+        
+        
+        
+        # Refresh interval
         ctk.CTkLabel(row_ri, text="Intervalle de rafraîchissement (secondes)",
                      font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"]).pack(side="left")
+                     text_color=COLORS["text"]).grid(row=0, column=0, sticky="w")
         self._refresh_var = ctk.StringVar(
             value=str(self._settings.get("refresh_interval", 5)))
         ctk.CTkEntry(row_ri, textvariable=self._refresh_var, width=80,
                      font=ctk.CTkFont(APP_FONT, 12),
                      fg_color=COLORS["surface2"], border_color=COLORS["border"],
-                     text_color=COLORS["text"]).pack(side="right")
+                     text_color=COLORS["text"]).grid(row=0, column=1, sticky="e")
+        
+        ctk.CTkFrame(row_ri, height=1, fg_color=COLORS["border"]).grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=10
+        )
+        
+        # Daily limit enabler
+        self._daily_limit_var = ctk.BooleanVar(value=self._settings.get("daily_limit", {}).get("enabled", False))
+        ctk.CTkLabel(row_ri, text="Activer la limite journalière",
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     text_color=COLORS["text"]).grid(row=2, column=0, sticky="w")
+        ctk.CTkCheckBox(
+            row_ri,
+            text="",
+            variable=self._daily_limit_var,
+            command=self._toggle_daily_limit
+        ).grid(row=2, column=1, sticky="e")
 
+        # Daily limit frame
+        self._daily_limit_frame = ctk.CTkFrame(row_ri, fg_color="transparent")
+        self._daily_limit_frame.grid(row=3, column=0, columnspan=2, sticky="ew")
+        
+        
+        self._toggle_daily_limit()
+        # Daily limit time
+
+        
+        self._daily_limit_time_var = ctk.StringVar(value=str(self._settings.get("daily_limit", {}).get("limit", 7200)))
+
+        ctk.CTkLabel(self._daily_limit_frame, text="Limite journalière (secondes)",
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     text_color=COLORS["text"]).grid(row=3, column=0, sticky="w")
+        ctk.CTkEntry(self._daily_limit_frame, textvariable=self._daily_limit_time_var, width=80,
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     fg_color=COLORS["surface2"], border_color=COLORS["border"],
+                     text_color=COLORS["text"]).grid(row=3, column=1, sticky="e")
+
+        # Daily limit action
+        self._daily_limit_action_var = ctk.StringVar(value=self._settings["daily_limit"]["action"])
+        ctk.CTkRadioButton(self._daily_limit_frame, text="Action : Popup", variable=self._daily_limit_action_var, value="popup").grid(row=4, column=0, sticky="w")
+        ctk.CTkRadioButton(self._daily_limit_frame, text="Action : Eteindre l'ordinateur", variable=self._daily_limit_action_var, value="kill").grid(row=4, column=1, sticky="e")
+
+        # Daily limit popup action
+        self._daily_limit_popup_var = ctk.StringVar(value=str(self._settings.get("daily_limit", {}).get("popup_frequency", 600)))
+        ctk.CTkLabel(self._daily_limit_frame, text="Frequences de popup (secondes)",
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     text_color=COLORS["text"]).grid(row=5, column=0, sticky="w")
+        ctk.CTkEntry(self._daily_limit_frame, textvariable=self._daily_limit_popup_var, width=80,
+                     font=ctk.CTkFont(APP_FONT, 12),
+                     fg_color=COLORS["surface2"], border_color=COLORS["border"],
+                     text_color=COLORS["text"]).grid(row=5, column=1, sticky="e")
+        
+        
+        # Restricted apps
         rest = self._card(self)
         rest.pack(fill="x", padx=28, pady=(0, 12))
 
@@ -181,6 +241,11 @@ class SettingsView(ctk.CTkScrollableFrame):
                       text_color="#000", corner_radius=10, height=38,
                       command=self._save).pack(anchor="e", padx=28, pady=(4, 24))
 
+    def _toggle_daily_limit(self):
+            if self._daily_limit_var.get():
+                self._daily_limit_frame.grid()
+            else:
+                self._daily_limit_frame.grid_remove()
 
     def _render_apps(self):
         for w in self._apps_frame.winfo_children():
@@ -246,10 +311,18 @@ class SettingsView(ctk.CTkScrollableFrame):
     def _save(self):
         try:
             interval = int(self._refresh_var.get())
+            daily_limit_enabled = self._daily_limit_var.get()
+            daily_limit_time = int(self._daily_limit_time_var.get())
+            daily_limit_action = self._daily_limit_action_var.get()
+            daily_limit_popup_frequency = int(self._daily_limit_popup_var.get())
         except ValueError:
-            messagebox.showerror("Erreur", "L'intervalle doit être un entier.")
+            messagebox.showerror("Erreur", "Les valeurs sont invalides.")
             return
         self._settings["refresh_interval"] = interval
+        self._settings["daily_limit"]["enabled"] = daily_limit_enabled
+        self._settings["daily_limit"]["limit"] = daily_limit_time
+        self._settings["daily_limit"]["action"] = daily_limit_action
+        self._settings["daily_limit"]["popup_frequency"] = daily_limit_popup_frequency
         save_settings(self._settings)
         messagebox.showinfo("Sauvegardé", "Paramètres sauvegardés ✓")
 

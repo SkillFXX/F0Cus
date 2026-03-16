@@ -94,6 +94,10 @@ def load_app_totals_today() -> dict:
         pass
     return dict(result)
 
+def load_total_today() -> int:
+    return sum(load_app_totals_today().values())
+
+
 def fmt_time(seconds: int) -> str:
     if seconds < 60:
         return f"{seconds}s"

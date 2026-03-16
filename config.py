@@ -1,7 +1,3 @@
-"""
-config.py — Constantes globales, chemins et palette de couleurs
-"""
-
 import os
 import customtkinter as ctk
 
@@ -26,6 +22,7 @@ DEFAULT_SETTINGS: dict = {
         {"name": "Fortnite.exe", "limit": 1800, "action": "popup", "popup_frequency": 300},
         {"name": "netflix.exe",  "limit": 3600, "action": "popup", "popup_frequency": 600},
     ],
+    "daily_limit": {"enabled": False, "limit": 7200, "action": "popup", "popup_frequency": 600},
 }
 
 COLORS: dict[str, str] = {

@@ -1,108 +1,143 @@
 import time
 import threading
 from collections import defaultdict
+import subprocess
 
 import psutil
 import pyautogui
-import win32gui       # type: ignore
-import win32process   # type: ignore
+import win32gui
+import win32process
 from pynput import keyboard
 
-from data import commit_activity, load_settings
-
+from data import commit_activity, load_settings, load_total_today
 
 class ActivityMonitor(threading.Thread):
 
     def __init__(self, popup_callback):
         super().__init__(daemon=True)
-        self._stop_event      = threading.Event()
-        self._popup_callback  = popup_callback
 
-        self._last_cursor     = pyautogui.position()
-        self._keys: list      = []
+        self.stop_event = threading.Event()
+        self.popup = popup_callback
 
-        self._restricted_timers: dict = defaultdict(int)
-        self._last_popup_ts: dict     = defaultdict(float)
+        self.last_cursor = pyautogui.position()
+        self.keys = []
 
-        self._start_keyboard_listener()
+        self.restricted_time = defaultdict(int)
+        self.last_popup = defaultdict(float)
+        self.last_daily_popup = 0
 
+        self.start_keyboard_listener()
 
-    def _start_keyboard_listener(self):
+    def start_keyboard_listener(self):
         def on_press(key):
             try:
-                self._keys.append(key.char)
-            except AttributeError:
-                self._keys.append(str(key))
+                self.keys.append(key.char)
+            except:
+                self.keys.append(str(key))
 
-        self._kb_listener = keyboard.Listener(on_press=on_press)
-        self._kb_listener.start()
+        self.listener = keyboard.Listener(on_press=on_press)
+        self.listener.start()
 
-
-    def get_active_app(self) -> str | None:
+    def get_active_app(self):
         try:
             hwnd = win32gui.GetForegroundWindow()
             _, pid = win32process.GetWindowThreadProcessId(hwnd)
             return psutil.Process(pid).name()
-        except Exception:
+        except:
             return None
 
-    def _check_restricted(self, app_name: str, elapsed: int):
-        settings = load_settings()
-        for rule in settings.get("restricted_apps", []):
-            if rule["name"].lower() != app_name.lower():
-                continue
-
-            self._restricted_timers[app_name] += elapsed
-            total  = self._restricted_timers[app_name]
-            limit  = rule.get("limit", 3600)
-            action = rule.get("action", "popup")
-            freq   = rule.get("popup_frequency", 300)
-
-            if total < limit:
-                continue
-
-            if action == "kill":
-                self._popup_callback(app_name, total, limit)
-                self._kill_app(app_name)
-            else:
-                now = time.time()
-                if now - self._last_popup_ts[app_name] >= freq:
-                    self._last_popup_ts[app_name] = now
-                    self._popup_callback(app_name, total, limit)
-
-    def _kill_app(self, app_name: str):
-        for proc in psutil.process_iter(["name"]):
-            if proc.info["name"] and proc.info["name"].lower() == app_name.lower():
+    def kill_app(self, name):
+        for p in psutil.process_iter(["name"]):
+            if p.info["name"] and p.info["name"].lower() == name.lower():
                 try:
-                    proc.kill()
-                except Exception:
+                    p.kill()
+                except:
                     pass
 
     def run(self):
-        while not self._stop_event.is_set():
+
+        while not self.stop_event.is_set():
+
             settings = load_settings()
             interval = settings.get("refresh_interval", 5)
+
             time.sleep(interval)
 
+            # detect activity
             cursor = pyautogui.position()
-            if cursor != self._last_cursor:
-                detected = "cursor_movement"
-                self._last_cursor = cursor
-            elif self._keys:
-                detected = "keyboard_input"
-            else:
-                detected = None
 
-            if detected:
-                app = self.get_active_app()
-                if app:
-                    commit_activity(app, interval, detected)
-                    self._check_restricted(app, interval)
-                self._keys.clear()
+            if cursor != self.last_cursor:
+                activity = "cursor_movement"
+                self.last_cursor = cursor
+
+            elif self.keys:
+                activity = "keyboard_input"
+
+            else:
+                activity = None
+
+            if not activity:
+                continue
+
+            app = self.get_active_app()
+            if not app:
+                continue
+
+            commit_activity(app, interval, activity)
+
+            # restricted apps
+            for rule in settings.get("restricted_apps", []):
+
+                if rule["name"].lower() != app.lower():
+                    continue
+
+                self.restricted_time[app] += interval
+
+                total = self.restricted_time[app]
+                limit = rule.get("limit", 3600)
+                action = rule.get("action", "popup")
+                freq = rule.get("popup_frequency", 300)
+
+                if total < limit:
+                    continue
+
+                now = time.time()
+
+                if action == "kill":
+                    self.popup(app, total, limit)
+                    self.kill_app(app)
+
+                elif now - self.last_popup[app] >= freq:
+                    self.last_popup[app] = now
+                    self.popup(app, total, limit)
+
+            # daily limit
+            daily = settings.get("daily_limit", {})
+
+            if daily.get("enabled", False):
+
+                total_today = load_total_today()
+                limit = daily.get("limit", 7200)
+                action = daily.get("action", "popup")
+                freq = daily.get("popup_frequency", 600)
+
+                if total_today >= limit:
+
+                    now = time.time()
+
+                    if now - self.last_daily_popup >= freq:
+
+                        self.last_daily_popup = now
+                        self.popup("Usage total aujourd'hui", total_today, limit)
+
+                    if action == "kill":
+                        subprocess.run(["shutdown", "/s", "/t", "100"])
+
+            self.keys.clear()
 
     def stop(self):
-        self._stop_event.set()
+        self.stop_event.set()
         try:
-            self._kb_listener.stop()
-        except Exception:
+            self.listener.stop()
+        except:
             pass
