@@ -1,12 +1,10 @@
 import threading
-import tkinter as tk
-
 import customtkinter as ctk
 import pystray                        
 from PIL import Image, ImageDraw      
 
 from config import COLORS, ICON_PATH, APP_FONT, APP_VERSION
-from data import t
+from data import t, log
 from monitor import ActivityMonitor
 from views import DashboardView, SettingsView
 from widgets import LimitPopup
@@ -15,6 +13,7 @@ def _make_tray_icon() -> Image.Image:
     try:
         return Image.open(ICON_PATH).resize((64, 64))
     except Exception:
+        log("Unable to load the tray icon", "ERROR")
         img  = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         draw.ellipse((4, 4, 60, 60), fill="#5B8CFF")

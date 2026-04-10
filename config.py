@@ -2,8 +2,7 @@ import os
 import customtkinter as ctk
 
 APP_FOLDER        = "F0Cus"
-ACTIVITY_FILENAME = "activity.csv"
-SETTINGS_FILENAME = "settings.json"
+DATABASE_FILENAME   = "database.db"
 LOG_FILENAME      = "app.log"
 ICON_FILENAME     = "icon.png"
 
@@ -11,8 +10,7 @@ _appdata   = os.getenv("APPDATA", os.path.expanduser("~"))
 APP_DIR    = os.path.join(_appdata, APP_FOLDER)
 os.makedirs(APP_DIR, exist_ok=True)
 
-ACTIVITY_PATH = os.path.join(APP_DIR, ACTIVITY_FILENAME)
-SETTINGS_PATH = os.path.join(APP_DIR, SETTINGS_FILENAME)
+DATABASE_PATH = os.path.join(APP_DIR, DATABASE_FILENAME)
 LOG_PATH      = os.path.join(APP_DIR, LOG_FILENAME)
 ICON_PATH     = os.path.join(os.path.dirname(__file__), ICON_FILENAME)
 
@@ -42,9 +40,9 @@ COLORS: dict[str, str] = {
 
 APP_FONT = "Arial"
 
-DEFAULT_LANGUAGE = "french"
+DEFAULT_LANGUAGE = "english"
 
-APP_VERSION = "v0.2.2"
+APP_VERSION = "v0.2.3"
 
 TRANSLATIONS = {
     "french": {

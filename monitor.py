@@ -9,7 +9,7 @@ import win32gui
 import win32process
 from pynput import keyboard
 
-from data import commit_activity, load_settings, load_total_today
+from data import commit_activity, load_settings, load_total_today, log
 
 class ActivityMonitor(threading.Thread):
 
@@ -44,6 +44,7 @@ class ActivityMonitor(threading.Thread):
             _, pid = win32process.GetWindowThreadProcessId(hwnd)
             return psutil.Process(pid).name()
         except:
+            log("Unable to retrieve the active application", "ERROR")
             return None
 
     def kill_app(self, name):
@@ -52,6 +53,7 @@ class ActivityMonitor(threading.Thread):
                 try:
                     p.kill()
                 except:
+                    log("Unable to kill the application", "ERROR")
                     pass
 
     def run(self):
@@ -63,7 +65,6 @@ class ActivityMonitor(threading.Thread):
 
             time.sleep(interval)
 
-            # detect activity
             cursor = pyautogui.position()
 
             if cursor != self.last_cursor:
@@ -140,4 +141,5 @@ class ActivityMonitor(threading.Thread):
         try:
             self.listener.stop()
         except:
+            log("Unable to stop keyboard listening", "ERROR")
             pass
