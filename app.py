@@ -1,7 +1,8 @@
 import threading
 import customtkinter as ctk
 import pystray                        
-from PIL import Image, ImageDraw      
+from PIL import Image, ImageDraw
+import sys
 
 from config import COLORS, ICON_PATH, APP_FONT, APP_VERSION
 from data import t, log
@@ -16,7 +17,7 @@ def _make_tray_icon() -> Image.Image:
         log("Unable to load the tray icon", "ERROR")
         img  = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        draw.ellipse((4, 4, 60, 60), fill="#5B8CFF")
+        draw.ellipse((4, 4, 60, 60), fill=COLORS["bg"])
         draw.text((18, 16), "F0", fill="white")
         return img
 
@@ -25,6 +26,7 @@ class F0CusApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("F0Cus")
+        self.iconbitmap(sys.executable)
         self.geometry("860x620")
         self.minsize(780, 540)
         self.configure(fg_color=COLORS["bg"])
@@ -115,16 +117,14 @@ class F0CusApp(ctk.CTk):
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quitter",      self._quit_app),
         )
-        self._tray_icon = pystray.Icon("F0Cus", image, "F0Cus — Monitoring actif", menu)
+        self._tray_icon = pystray.Icon("F0Cus", image, "F0Cus", menu)
 
         threading.Thread(target=self._tray_icon.run, daemon=True).start()
 
     def _hide_to_tray(self):
-        """Cache la fenêtre sans arrêter le monitoring."""
         self.withdraw()
 
     def _show_from_tray(self, icon=None, item=None):
-        """Rappelle la fenêtre depuis le systray."""
         self.after(0, self._restore_window)
 
     def _restore_window(self):
@@ -133,7 +133,6 @@ class F0CusApp(ctk.CTk):
         self.focus_force()
 
     def _quit_app(self, icon=None, item=None):
-        """Arrêt propre : monitoring + systray + fenêtre."""
         if self._monitor:
             self._monitor.stop()
         if self._tray_icon:

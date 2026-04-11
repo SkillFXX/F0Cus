@@ -1,18 +1,26 @@
 import os
+import sys
 import customtkinter as ctk
 
+ASSETS_FOLDER = "assets"
 APP_FOLDER        = "F0Cus"
 DATABASE_FILENAME   = "database.db"
-LOG_FILENAME      = "app.log"
 ICON_FILENAME     = "icon.png"
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 _appdata   = os.getenv("APPDATA", os.path.expanduser("~"))
 APP_DIR    = os.path.join(_appdata, APP_FOLDER)
 os.makedirs(APP_DIR, exist_ok=True)
 
 DATABASE_PATH = os.path.join(APP_DIR, DATABASE_FILENAME)
-LOG_PATH      = os.path.join(APP_DIR, LOG_FILENAME)
-ICON_PATH     = os.path.join(os.path.dirname(__file__), ICON_FILENAME)
+ICON_PATH = resource_path(f"assets/{ICON_FILENAME}")
 
 DEFAULT_SETTINGS: dict = {
     "refresh_interval": 5,
