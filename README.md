@@ -24,7 +24,7 @@ You can download a pre-compiled version from the [Releases](https://github.com/S
 
 ```bash
     git clone https://github.com/SkillFXX/F0Cus # Clone the repository
-    cd auto-cutter
+    cd F0Cus
 
     pip install -r requirements.txt # Download dependencies
 

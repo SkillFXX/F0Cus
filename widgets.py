@@ -1,142 +1,201 @@
 import math
 import tkinter as tk
 from datetime import datetime, timedelta
+from io import BytesIO
 
 import customtkinter as ctk
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import numpy as np
 
 from colors import app_color
 from config import COLORS, APP_FONT
 from data import fmt_time, t
 
 
-# Donut chart by Sonnet 4.6
+# Donut chart using matplotlib
 
-class DonutChart(tk.Canvas):
+class DonutChart(tk.Frame):
     def __init__(self, master, data: dict, size: int = 200, **kwargs):
-        super().__init__(master, width=size, height=size,
-                         bg=COLORS["surface"], highlightthickness=0, **kwargs)
-        self._size = size
-        self.draw(data)
+        super().__init__(master, bg=COLORS["surface"], **kwargs)
+        self.size = size
+        self.data = data
+        self._create_chart()
+
+    def _create_chart(self):
+        # Create figure with matplotlib
+        fig = Figure(figsize=(self.size/100, self.size/100), dpi=100, 
+                     facecolor=COLORS["surface"], edgecolor='none')
+        ax = fig.add_subplot(111)
+        
+        filtered = {k: v for k, v in self.data.items() if v > 0}
+        
+        if not filtered:
+            # Draw empty state
+            ax.text(0.5, 0.5, t("no_data"), 
+                   ha='center', va='center', 
+                   color=COLORS["text_muted"],
+                   fontsize=10, transform=ax.transAxes)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+        else:
+            # Sort by value descending
+            sorted_data = sorted(filtered.items(), key=lambda x: x[1], reverse=True)
+            labels = [app for app, _ in sorted_data]
+            sizes = [val for _, val in sorted_data]
+            colors = [app_color(app) for app in labels]
+            
+            # Create donut chart
+            wedges, texts = ax.pie(sizes, labels=None, colors=colors,
+                                   wedgeprops=dict(width=0.4, edgecolor=COLORS["surface"]),
+                                   startangle=90)
+            
+            # Add center text
+            total = sum(sizes)
+            centre_circle = plt.Circle((0, 0), 0.70, fc=COLORS["surface"], 
+                                       edgecolor='none')
+            ax.add_artist(centre_circle)
+            
+            # Add text in center
+            ax.text(0, 0.05, fmt_time(total), 
+                   ha='center', va='center',
+                   color=COLORS["text"],
+                   fontsize=11, fontweight='bold')
+            ax.text(0, -0.15, t("seven_days"),
+                   ha='center', va='center',
+                   color=COLORS["text_muted"],
+                   fontsize=8)
+        
+        ax.axis('equal')
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        
+        # Embed in tkinter
+        canvas = FigureCanvasTkAgg(fig, master=self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
+        
+        self.fig = fig
+        self.canvas = canvas
 
     def draw(self, data: dict):
-        self.delete("all")
-        filtered = {k: v for k, v in data.items() if v > 0}
-        if not filtered:
-            self._draw_empty()
-            return
-
-        total  = sum(filtered.values())
-        cx, cy = self._size / 2, self._size / 2
-        R_out  = self._size * 0.42
-        R_in   = self._size * 0.26
-        GAP    = 1.5   # demi-espace en degrés entre chaque segment
-
-        start = -90.0
-        for name, value in sorted(filtered.items(), key=lambda x: x[1], reverse=True):
-            sweep = (value / total) * 360.0
-            gap   = GAP if sweep > GAP * 4 else 0
-            self._draw_segment(cx, cy, R_in, R_out,
-                                start + gap, sweep - gap * 2,
-                                app_color(name))
-            start += sweep
-
-        # Trou central
-        self.create_oval(cx - R_in, cy - R_in, cx + R_in, cy + R_in,
-                         fill=COLORS["surface"], outline="")
-        # Texte central
-        self.create_text(cx, cy - 9, text=fmt_time(total),
-                         fill=COLORS["text"], font=(APP_FONT, 11, "bold"))
-        self.create_text(cx, cy + 9, text=t("seven_days"),
-                         fill=COLORS["text_muted"], font=(APP_FONT, 8))
-
-    def _draw_segment(self, cx, cy, r_in, r_out, start_deg, sweep_deg, color):
-        if abs(sweep_deg) < 0.2:
-            return
-        steps = max(4, int(abs(sweep_deg) / 2))
-        pts = []
-        for i in range(steps + 1):
-            a = math.radians(start_deg + sweep_deg * i / steps)
-            pts += [cx + r_out * math.cos(a), cy + r_out * math.sin(a)]
-        for i in range(steps + 1):
-            a = math.radians(start_deg + sweep_deg * (steps - i) / steps)
-            pts += [cx + r_in * math.cos(a), cy + r_in * math.sin(a)]
-        self.create_polygon(pts, fill=color, outline="", smooth=False)
-
-    def _draw_empty(self):
-        cx, cy = self._size / 2, self._size / 2
-        r = self._size * 0.42
-        self.create_oval(cx - r, cy - r, cx + r, cy + r,
-                         outline=COLORS["border"], width=2, fill="")
-        self.create_text(cx, cy, text=t("no_data"),
-                         fill=COLORS["text_muted"], font=(APP_FONT, 9),
-                         justify="center")
+        """Update the chart with new data"""
+        self.data = data
+        # Clear the frame
+        for widget in self.winfo_children():
+            widget.destroy()
+        plt.close(self.fig)
+        # Recreate the chart
+        self._create_chart()
 
 
-# Bar chart by Sonnet 4.6
+# Bar chart using matplotlib
 
-class BarChart(tk.Canvas):
-
+class BarChart(tk.Frame):
     def __init__(self, master, daily_data: dict,
                  width: int = 520, height: int = 200, **kwargs):
-        super().__init__(master, width=width, height=height,
-                         bg=COLORS["surface"], highlightthickness=0, **kwargs)
+        super().__init__(master, bg=COLORS["surface"], **kwargs)
         self.width = width
         self.height = height
-        self.draw(daily_data)
+        self.daily_data = daily_data
+        self._create_chart()
 
-    def draw(self, daily_data: dict):
-        self.delete("all")
+    def _create_chart(self):
+        # Create figure
+        fig = Figure(figsize=(self.width/100, self.height/100), dpi=100,
+                     facecolor=COLORS["surface"], edgecolor='none')
+        ax = fig.add_subplot(111)
+        ax.set_facecolor(COLORS["surface"])
 
-        PAD_L, PAD_R, PAD_T, PAD_B = 52, 16, 18, 36
-        draw_w = self.width - PAD_L - PAD_R
-        draw_h = self.height - PAD_T - PAD_B
-
-        today      = datetime.now()
+        today = datetime.now()
         days_order = [(today - timedelta(days=6 - i)).strftime("%d/%m")
                       for i in range(7)]
+        
+        # Prepare data
+        all_apps = set()
+        for day_data in self.daily_data.values():
+            all_apps.update(day_data.keys())
+        all_apps = sorted(list(all_apps))
+        
+        # Build stacked bar data
+        x_pos = np.arange(len(days_order))
+        bottom = np.zeros(len(days_order))
+        
+        if not all_apps:
+            ax.text(0.5, 0.5, t("no_data"),
+                   ha='center', va='center',
+                   color=COLORS["text_muted"],
+                   fontsize=10, transform=ax.transAxes)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+        else:
+            # Plot each app as a stack
+            for app in all_apps:
+                values = []
+                for day in days_order:
+                    day_data = self.daily_data.get(day, {})
+                    values.append(day_data.get(app, 0))
+                
+                ax.bar(x_pos, values, bottom=bottom,
+                      label=app, color=app_color(app),
+                      width=0.6, edgecolor='none')
+                
+                # Add values to each segment
+                for i, val in enumerate(values):
+                    if val > 0:
+                        bottom[i] += val
+            
+            # Set x-axis labels
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(days_order, fontsize=8)
+            
+            # Highlight today
+            today_str = today.strftime("%d/%m")
+            if today_str in days_order:
+                today_idx = days_order.index(today_str)
+                ax.get_xticklabels()[today_idx].set_color(COLORS["accent"])
+                ax.get_xticklabels()[today_idx].set_fontweight('bold')
+            
+            # Format y-axis with time labels
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(
+                lambda x, p: fmt_time(int(x))
+            ))
+            
+            # Style
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['left'].set_color(COLORS["border"])
+            ax.spines['bottom'].set_color(COLORS["border"])
+            
+            ax.tick_params(axis='y', colors=COLORS["text_muted"], labelsize=7)
+            ax.tick_params(axis='x', colors=COLORS["text_muted"], labelsize=8)
+            
+            # Grid
+            ax.grid(axis='y', alpha=0.2, linestyle='--', color=COLORS["border"])
+            ax.set_axisbelow(True)
+        
+        fig.subplots_adjust(left=0.08, right=0.95, top=0.95, bottom=0.1)
+        
+        # Embed in tkinter
+        canvas = FigureCanvasTkAgg(fig, master=self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
+        
+        self.fig = fig
+        self.canvas = canvas
 
-        max_val = max(
-            (sum(daily_data.get(d, {}).values()) for d in days_order),
-            default=1
-        ) or 1
-
-        # Axes
-        self.create_line(PAD_L, PAD_T, PAD_L, PAD_T + draw_h,
-                         fill=COLORS["border"], width=1)
-        self.create_line(PAD_L, PAD_T + draw_h, PAD_L + draw_w, PAD_T + draw_h,
-                         fill=COLORS["border"], width=1)
-
-        # Y-ticks
-        for pct in (0.25, 0.5, 0.75, 1.0):
-            y = PAD_T + draw_h - pct * draw_h
-            self.create_line(PAD_L, y, PAD_L + draw_w, y,
-                             fill=COLORS["border"], dash=(2, 5), width=1)
-            self.create_text(PAD_L - 4, y, text=fmt_time(int(max_val * pct)),
-                             fill=COLORS["text_muted"], font=(APP_FONT, 6),
-                             anchor="e")
-
-        bar_w   = draw_w / 7
-        spacing = bar_w * 0.15
-
-        for i, day in enumerate(days_order):
-            apps_day = daily_data.get(day, {})
-            x0 = PAD_L + i * bar_w + spacing
-            x1 = PAD_L + (i + 1) * bar_w - spacing
-            y  = PAD_T + draw_h
-
-            for app_name, secs in sorted(apps_day.items(), key=lambda x: x[1]):
-                if secs <= 0:
-                    continue
-                bar_h = max((secs / max_val) * draw_h, 1.5)
-                self.create_rectangle(x0, y - bar_h, x1, y,
-                                      fill=app_color(app_name), outline="")
-                y -= bar_h
-
-            is_today = (day == today.strftime("%d/%m"))
-            self.create_text((x0 + x1) / 2, PAD_T + draw_h + 14,
-                             text=day,
-                             fill=COLORS["accent"] if is_today else COLORS["text_muted"],
-                             font=(APP_FONT, 7))
+    def draw(self, daily_data: dict):
+        """Update the chart with new data"""
+        self.daily_data = daily_data
+        # Clear the frame
+        for widget in self.winfo_children():
+            widget.destroy()
+        plt.close(self.fig)
+        # Recreate the chart
+        self._create_chart()
 
 
 class LegendItem(ctk.CTkFrame):

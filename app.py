@@ -27,7 +27,7 @@ class F0CusApp(ctk.CTk):
         super().__init__()
         self.title("F0Cus")
         self.iconbitmap(sys.executable)
-        self.geometry("860x620")
+        self.geometry("1060x620")
         self.minsize(780, 540)
         self.configure(fg_color=COLORS["bg"])
 
