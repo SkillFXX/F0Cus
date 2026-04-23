@@ -105,7 +105,8 @@ TRANSLATIONS = {
         "limit_word":"Limite :",
         "software_language":"Langue du logiciel",
         "exceeded_time_limit_app":"Vous avez dépassé votre temps d'utilisation sur",
-        "exceeded_time_limit":"Vous avez dépassé votre limite de temps aujourd'hui"
+        "exceeded_time_limit":"Vous avez dépassé votre limite de temps aujourd'hui",
+        "already_running":"Une instance de F0Cus est déjà en cours d'exécution."
     },
     "english": {
         "title": "F0Cus",
@@ -159,7 +160,8 @@ TRANSLATIONS = {
         "limit_word": "Limit:",
         "software_language": "Software language",
         "exceeded_time_limit_app":"You've exceeded your time limit on",
-        "exceeded_time_limit":"You have exceeded your time limit today"
+        "exceeded_time_limit":"You have exceeded your time limit today",
+        "already_running":"An instance of F0Cus is already running."
     },
     "spanish": {
         "title": "F0Cus",
@@ -213,7 +215,8 @@ TRANSLATIONS = {
         "limit_word": "Límite:",
         "software_language": "Idioma del software",
         "exceeded_time_limit_app":"Has superado el límite de tiempo en",
-        "exceeded_time_limit":"Hoy has superado el límite de tiempo"
+        "exceeded_time_limit":"Hoy has superado el límite de tiempo",
+        "already_running":"Una instancia de F0Cus ya está en ejecución."
     },
     "chinese": {
         "title": "F0Cus",
@@ -267,7 +270,8 @@ TRANSLATIONS = {
         "limit_word": "限制：",
         "software_language": "软件语言",
         "exceeded_time_limit_app":"您已超过时限",
-        "exceeded_time_limit":"今天你超时了"
+        "exceeded_time_limit":"今天你超时了",
+        "already_running":"F0Cus的一个实例已经在运行。"
     }
 }
 
