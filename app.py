@@ -3,12 +3,12 @@ import customtkinter as ctk
 import pystray                        
 from PIL import Image, ImageDraw
 import sys
+from win11toast import toast
 
 from config import COLORS, ICON_PATH, APP_FONT, APP_VERSION
-from data import t, log
+from data import t, log, fmt_time
 from monitor import ActivityMonitor
 from views import DashboardView, SettingsView
-from widgets import LimitPopup
 
 def _make_tray_icon() -> Image.Image:
     try:
@@ -101,13 +101,14 @@ class F0CusApp(ctk.CTk):
      
     def _start_monitor(self):
         def popup_cb(app_name: str, total: int, limit: int):
-            self.after(0, lambda: self.show_limit_popup(app_name, total, limit)) # I don't really understand but it works
+            try:
+                toast(f"{t('exceeded_time_limit_app')} {app_name}" if app_name else t("exceeded_time_limit"), f"{fmt_time(total)} / {fmt_time(limit)}", on_click=lambda args: self.after(0, self._restore_window), scenario='alarm', duration="long")
+            except Exception as e:
+                log(f"Failed to show notification: {e}", "ERROR")
 
         self._monitor = ActivityMonitor(popup_callback=popup_cb)
         self._monitor.start()
 
-    def show_limit_popup(self, app_name: str, total: int, limit: int):
-        LimitPopup(self, app_name, total, limit)
 
     def _start_tray(self):
         image = _make_tray_icon()

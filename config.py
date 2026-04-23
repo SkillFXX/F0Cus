@@ -103,7 +103,9 @@ TRANSLATIONS = {
         "invalid_numeric_values":"Valeurs numériques invalides.",
         "example_exe":"ex: chrome.exe",
         "limit_word":"Limite :",
-        "software_language":"Langue du logiciel"
+        "software_language":"Langue du logiciel",
+        "exceeded_time_limit_app":"Vous avez dépassé votre temps d'utilisation sur",
+        "exceeded_time_limit":"Vous avez dépassé votre limite de temps aujourd'hui"
     },
     "english": {
         "title": "F0Cus",
@@ -155,7 +157,9 @@ TRANSLATIONS = {
         "invalid_numeric_values": "Invalid numeric values.",
         "example_exe": "ex: chrome.exe",
         "limit_word": "Limit:",
-        "software_language": "Software language"
+        "software_language": "Software language",
+        "exceeded_time_limit_app":"You've exceeded your time limit on",
+        "exceeded_time_limit":"You have exceeded your time limit today"
     },
     "spanish": {
         "title": "F0Cus",
@@ -207,7 +211,9 @@ TRANSLATIONS = {
         "invalid_numeric_values": "Valores numéricos no válidos.",
         "example_exe": "ej: chrome.exe",
         "limit_word": "Límite:",
-        "software_language": "Idioma del software"
+        "software_language": "Idioma del software",
+        "exceeded_time_limit_app":"Has superado el límite de tiempo en",
+        "exceeded_time_limit":"Hoy has superado el límite de tiempo"
     },
     "chinese": {
         "title": "F0Cus",
@@ -259,7 +265,9 @@ TRANSLATIONS = {
         "invalid_numeric_values": "无效的数值。",
         "example_exe": "例如：chrome.exe",
         "limit_word": "限制：",
-        "software_language": "软件语言"
+        "software_language": "软件语言",
+        "exceeded_time_limit_app":"您已超过时限",
+        "exceeded_time_limit":"今天你超时了"
     }
 }
 

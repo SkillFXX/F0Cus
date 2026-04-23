@@ -214,30 +214,3 @@ class LegendItem(ctk.CTkFrame):
         ctk.CTkLabel(self, text=value_str,
                      font=ctk.CTkFont(APP_FONT, 11),
                      text_color=COLORS["text_muted"]).pack(side="right", padx=(10, 0))
-
-class LimitPopup(ctk.CTkToplevel):
-
-    def __init__(self, master, app_name: str, total: int, limit: int):
-        super().__init__(master)
-        self.title(t("time_exceeded"))
-        self.geometry("380x230")
-        self.resizable(False, False)
-        self.configure(fg_color=COLORS["surface"])
-        self.attributes("-topmost", True)
-
-        ctk.CTkLabel(self, text=t("time_exceeded"),
-                     font=ctk.CTkFont(APP_FONT, 17, "bold"),
-                     text_color=COLORS["danger"]).pack(pady=(24, 6))
-        ctk.CTkLabel(self,
-                     text=(f"Vous avez utilisé {app_name}\n"
-                           f"pendant {fmt_time(total)}  (limite : {fmt_time(limit)})"),
-                     font=ctk.CTkFont(APP_FONT, 12),
-                     text_color=COLORS["text"], justify="center").pack(pady=8)
-        ctk.CTkLabel(self, text=t("take_a_break"),
-                     font=ctk.CTkFont(APP_FONT, 11),
-                     text_color=COLORS["text_muted"]).pack(pady=4)
-        ctk.CTkButton(self, text=t("ok_understood"),
-                      font=ctk.CTkFont(APP_FONT, 12, "bold"),
-                      fg_color=COLORS["danger"], hover_color="#DC2626",
-                      corner_radius=10, height=36,
-                      command=self.destroy).pack(pady=16)

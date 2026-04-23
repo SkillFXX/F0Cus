@@ -129,7 +129,7 @@ class ActivityMonitor(threading.Thread):
                     if now - self.last_daily_popup >= freq:
 
                         self.last_daily_popup = now
-                        self.popup("Usage total aujourd'hui", total_today, limit)
+                        self.popup(None, total_today, limit)
 
                     if action == "kill":
                         subprocess.run(["shutdown", "/s", "/t", "100"])
